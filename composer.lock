@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7d3a49b2577a7b47ead01b2d1f532d3c",
+    "content-hash": "830c579c429d1b6bf60add84050ae547",
     "packages": [
         {
             "name": "2tvenom/cborencode",
@@ -19156,6 +19156,40 @@
                 "source": "https://github.com/Seldaek/phar-utils/tree/1.1.2"
             },
             "time": "2021-08-19T21:01:38+00:00"
+        },
+        {
+            "name": "splendidinternet/mage2-locale-de-de",
+            "version": "1.69.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/splendidinternet/Magento2_German_LocalePack_de_DE.git",
+                "reference": "94ef34fed675c9edbd506ae31450450bffa65b10"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/splendidinternet/Magento2_German_LocalePack_de_DE/zipball/94ef34fed675c9edbd506ae31450450bffa65b10",
+                "reference": "94ef34fed675c9edbd506ae31450450bffa65b10",
+                "shasum": ""
+            },
+            "require": {
+                "magento/framework": "^100.0.0 || ^101.0.0 || ^102.0.0 || ^103.0.0 || ^104.0.0"
+            },
+            "type": "magento2-language",
+            "autoload": {
+                "files": [
+                    "registration.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "OSL-3.0"
+            ],
+            "description": "German (Germany) language",
+            "support": {
+                "issues": "https://github.com/splendidinternet/Magento2_German_LocalePack_de_DE/issues",
+                "source": "https://github.com/splendidinternet/Magento2_German_LocalePack_de_DE/tree/1.69.0"
+            },
+            "time": "2021-10-14T20:26:52+00:00"
         },
         {
             "name": "spomky-labs/aes-key-wrap",
