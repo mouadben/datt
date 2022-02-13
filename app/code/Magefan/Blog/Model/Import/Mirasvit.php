@@ -21,29 +21,12 @@ class Mirasvit extends AbstractImport
 
     public function execute()
     {
-        $config = \Magento\Framework\App\ObjectManager::getInstance()
-            ->get(\Magento\Framework\App\DeploymentConfig::class);
-        $pref = ConfigOptionsListConstants::CONFIG_PATH_DB_CONNECTION_DEFAULT . '/';
-        $this->setData(
-            'dbhost',
-            $config->get($pref . ConfigOptionsListConstants::KEY_HOST)
-        )->setData(
-            'uname',
-            $config->get($pref . ConfigOptionsListConstants::KEY_USER)
-        )->setData(
-            'pwd',
-            $config->get($pref . ConfigOptionsListConstants::KEY_PASSWORD)
-        )->setData(
-            'dbname',
-            $config->get($pref . ConfigOptionsListConstants::KEY_NAME)
-        );
-
         $adapter = $this->getDbAdapter();
         $_pref = $this->getPrefix();
 
         $sql = 'SELECT * FROM ' . $_pref . 'mst_blog_post_entity LIMIT 1';
         try {
-            $adapter->query($sql);
+            $adapter->query($sql)->execute();
         } catch (\Exception $e) {
             throw new \Exception(__('Mirasvit Blog Extension not detected.'), 1);
         }
@@ -90,7 +73,7 @@ class Mirasvit extends AbstractImport
             } catch (\Magento\Framework\Exception\LocalizedException $e) {
                 unset($category);
                 $this->_skippedCategories[] = $data['title'];
-                $this->_logger->addDebug('Blog Category Import [' . $data['title'] . ']: '. $e->getMessage());
+                $this->_logger->debug('Blog Category Import [' . $data['title'] . ']: '. $e->getMessage());
             }
         }
 
@@ -171,7 +154,7 @@ class Mirasvit extends AbstractImport
                 }
             } catch (\Magento\Framework\Exception\LocalizedException $e) {
                 $this->_skippedTags[] = $data['title'];
-                $this->_logger->addDebug('Blog Tag Import [' . $data['title'] . ']: '. $e->getMessage());
+                $this->_logger->debug('Blog Tag Import [' . $data['title'] . ']: '. $e->getMessage());
             }
         }
 
@@ -282,7 +265,7 @@ class Mirasvit extends AbstractImport
                 $this->_importedPostsCount++;
             } catch (\Magento\Framework\Exception\LocalizedException $e) {
                 $this->_skippedPosts[] = $data['title'];
-                $this->_logger->addDebug('Blog Post Import [' . $data['title'] . ']: '. $e->getMessage());
+                $this->_logger->debug('Blog Post Import [' . $data['title'] . ']: '. $e->getMessage());
             }
             unset($post);
         }
@@ -347,5 +330,4 @@ class Mirasvit extends AbstractImport
         }
         return null;
     }
-
 }

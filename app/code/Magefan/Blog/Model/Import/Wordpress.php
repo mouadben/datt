@@ -36,9 +36,11 @@ class Wordpress extends AbstractImport
         $result = $adapter->query($sql)->execute();
         foreach ($result as $data) {
             /* Prepare category data */
+            /*
             foreach (['title', 'identifier'] as $key) {
                 $data[$key] = mb_convert_encoding($data[$key], 'HTML-ENTITIES', 'UTF-8');
             }
+            */
 
             $data['store_ids'] = [$this->getStoreId()];
             $data['is_active'] = 1;
@@ -59,7 +61,7 @@ class Wordpress extends AbstractImport
                     $data['title'] = 'Undefined';
                 }
                 $this->_skippedCategories[] = $data['title'];
-                $this->_logger->addDebug('Blog Category Import [' . $data['title'] . ']: '. $e->getMessage());
+                $this->_logger->debug('Blog Category Import [' . $data['title'] . ']: '. $e->getMessage());
             }
         }
 
@@ -114,11 +116,13 @@ class Wordpress extends AbstractImport
         $result = $adapter->query($sql)->execute();
         foreach ($result as $data) {
             /* Prepare tag data */
+            /*
             foreach (['title', 'identifier'] as $key) {
                 $data[$key] = mb_convert_encoding($data[$key], 'HTML-ENTITIES', 'UTF-8');
             }
+            */
 
-            if (isset($data['title']) && $data['title']{0} == '?') {
+            if (isset($data['title']) && isset($data['title'][0]) && $data['title'][0] == '?') {
                 /* fix for ???? titles */
                 $data['title'] = $data['identifier'];
             }
@@ -138,7 +142,7 @@ class Wordpress extends AbstractImport
                     $data['title'] = 'Undefined';
                 }
                 $this->_skippedTags[] = $data['title'];
-                $this->_logger->addDebug('Blog Tag Import [' . $data['title'] . ']: '. $e->getMessage());
+                $this->_logger->debug('Blog Tag Import [' . $data['title'] . ']: '. $e->getMessage());
             }
         }
 
@@ -274,9 +278,11 @@ class Wordpress extends AbstractImport
             }
 
             /* Prepare post data */
+            /*
             foreach (['post_title', 'post_name', 'post_content'] as $key) {
                 $data[$key] = mb_convert_encoding($data[$key], 'HTML-ENTITIES', 'UTF-8');
             }
+            */
 
             $creationTime = strtotime($data['post_date_gmt']);
 
@@ -319,13 +325,13 @@ class Wordpress extends AbstractImport
                 $post->setData($data)->save();
 
                 /* find post comment s*/
-                $sql = 'SELECT 
-                            * 
-                        FROM 
-                            '.$_pref.'comments 
-                        WHERE 
-                            `comment_approved`=1 
-                        AND 
+                $sql = 'SELECT
+                            *
+                        FROM
+                            '.$_pref.'comments
+                        WHERE
+                            `comment_approved`=1
+                        AND
                             `comment_post_ID` = ' . $wordpressPostId;
                 $resultComments = $adapter->query($sql)->execute();
                 $commentParents = [];
@@ -371,7 +377,7 @@ class Wordpress extends AbstractImport
                     $data['title'] = 'Undefined';
                 }
                 $this->_skippedPosts[] = $data['title'];
-                $this->_logger->addDebug('Blog Post Import [' . $data['title'] . ']: '. $e->getMessage());
+                $this->_logger->debug('Blog Post Import [' . $data['title'] . ']: '. $e->getMessage());
             }
 
             unset($post);
@@ -530,6 +536,55 @@ class Wordpress extends AbstractImport
         // Restore newlines in all elements.
         if (false !== strpos($pee, '<!-- wpnl -->')) {
             $pee = str_replace([ ' <!-- wpnl --> ', '<!-- wpnl -->' ], "\n", $pee);
+        }
+
+        // replace [caption] with <div>
+        while (false !== ($p1 = strpos($pee, '[caption'))) {
+            $p2 = strpos($pee, ']', $p1);
+
+            if (false === $p2) {
+                break;
+            }
+            $origElement = substr($pee, $p1, $p2 - $p1 + 1);
+            $divElement = html_entity_decode($origElement);
+            $divElement = str_replace('[caption', '<div', $divElement);
+            $divElement = str_replace('align="', 'class="wp-caption ', $divElement);
+            $divElement = str_replace(']', '>', $divElement);
+
+            $pee = str_replace($origElement, $divElement, $pee);
+            $pee = str_replace('[/caption]', '</div>', $pee);
+        }
+
+        // replace [video] with <div>
+        while (false !== ($p1 = strpos($pee, '[video'))) {
+            $p2 = strpos($pee, ']', $p1);
+
+            if (false === $p2) {
+                break;
+            }
+            $origElement = substr($pee, $p1, $p2 - $p1 + 1);
+            $divElement = html_entity_decode($origElement);
+
+            $source = '';
+
+            foreach (['mp4', 'ogg'] as $format) {
+                $len = strlen($format . '="');
+                $x1 = strpos($divElement, $format . '="');
+                if (false !== $x1) {
+                    $x2 = strpos($divElement, '"', $x1 + $len);
+                    if (false !== $x2) {
+                        $src = substr($divElement, $x1 + $len, $x2 - $x1 - $len);
+                        $source .= '<source src="' . $src . '" type="video/' . $format . '">';
+                    }
+                }
+            }
+
+            $divElement = str_replace('[video', '<video controls ', $divElement);
+            $divElement = str_replace('align="', 'class="wp-caption ', $divElement);
+            $divElement = str_replace(']', '>', $divElement);
+
+            $pee = str_replace($origElement, $divElement . $source, $pee);
+            $pee = str_replace('[/video]', '</video>', $pee);
         }
 
         return $pee;

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "830c579c429d1b6bf60add84050ae547",
+    "content-hash": "0da67b6873513adc9af3857b71b44817",
     "packages": [
         {
             "name": "2tvenom/cborencode",
@@ -5204,6 +5204,70 @@
                 }
             ],
             "time": "2021-01-18T20:58:21+00:00"
+        },
+        {
+            "name": "magefan/module-admin-user-guide",
+            "version": "2.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/magefan/module-admin-user-guide.git",
+                "reference": "35f950396e7a443cf93e00603e45b2da23c03b58"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/magefan/module-admin-user-guide/zipball/35f950396e7a443cf93e00603e45b2da23c03b58",
+                "reference": "35f950396e7a443cf93e00603e45b2da23c03b58",
+                "shasum": ""
+            },
+            "type": "magento2-module",
+            "autoload": {
+                "files": [
+                    "registration.php"
+                ],
+                "psr-4": {
+                    "Magefan\\AdminUserGuide\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "description": "Admin panel user guides.",
+            "support": {
+                "issues": "https://github.com/magefan/module-admin-user-guide/issues",
+                "source": "https://github.com/magefan/module-admin-user-guide/tree/2.0.1"
+            },
+            "time": "2021-12-30T07:25:20+00:00"
+        },
+        {
+            "name": "magefan/module-community",
+            "version": "2.1.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/magefan/module-community.git",
+                "reference": "1ba131ffe9d60f01194fb28785bc004803f0f97b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/magefan/module-community/zipball/1ba131ffe9d60f01194fb28785bc004803f0f97b",
+                "reference": "1ba131ffe9d60f01194fb28785bc004803f0f97b",
+                "shasum": ""
+            },
+            "require": {
+                "magefan/module-admin-user-guide": ">=2.0.0"
+            },
+            "type": "magento2-module",
+            "autoload": {
+                "files": [
+                    "registration.php"
+                ],
+                "psr-4": {
+                    "Magefan\\Community\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "support": {
+                "issues": "https://github.com/magefan/module-community/issues",
+                "source": "https://github.com/magefan/module-community/tree/2.1.8"
+            },
+            "time": "2021-12-22T11:09:27+00:00"
         },
         {
             "name": "magento/adobe-ims",

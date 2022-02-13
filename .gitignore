@@ -73,3 +73,6 @@ atlassian*
 /generated/*
 !/generated/.htaccess
 .DS_Store
+/pub/media/blog/*
+/pub/media/codazon_cache/*
+/pub/media/slideshow/*

@@ -212,7 +212,7 @@
     <fieldset name="additional_options">
         <argument name="data" xsi:type="array">
             <item name="config" xsi:type="array">
-                <item name="collapsible" xsi:type="boolean">true</item>
+                <item name="collapsible" xsi:type="boolean">false</item>
                 <item name="label" xsi:type="string" translate="true">Display Settings</item>
                 <item name="sortOrder" xsi:type="number">20</item>
             </item>
@@ -256,7 +256,7 @@
                     <item name="source" xsi:type="string">post</item>
                     <item name="dataScope" xsi:type="string">publish_time</item>
                     <item name="sortOrder" xsi:type="number">20</item>
-                    <item name="notice"  xsi:type="string" translate="true">You can set a future date to postpone publication. The post will not be available for reading until this date.</item>
+                    <item name="notice"  xsi:type="string" translate="true">You can set a future date to schedule the publication. The post will not be available for reading until this date.</item>
                 </item>
             </argument>
         </field>

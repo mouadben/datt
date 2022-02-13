@@ -228,6 +228,10 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
             $newCategories = [];
         }
 
+        if ($this->getData('is_active') && $this->getData('is_active') != $this->getOrigData('is_active')) {
+            $identities[] = self::CACHE_TAG . '_' . 0;
+        }
+
         $isChangedCategories = count(array_diff($oldCategories, $newCategories));
 
         if ($isChangedCategories) {
@@ -236,6 +240,13 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
             );
             foreach ($changedCategories as $categoryId) {
                 $identities[] = \Magefan\Blog\Model\Category::CACHE_TAG . '_' . $categoryId;
+            }
+        }
+
+        $links = $this->getData('links');
+        if (!empty($links['product'])) {
+            foreach ($links['product'] as $productId => $linkData) {
+                $identities[] = \Magento\Catalog\Model\Product::CACHE_TAG . '_' . $productId;
             }
         }
 
@@ -470,8 +481,17 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
      */
     public function getShortFilteredContent($len = null, $endСharacters = null)
     {
+        /* Fix for custom themes that send wrong parameters to this function, and that brings the error */
+        if (is_object($len)) {
+             $len = null;
+        }
+        /* End fix */
+        
         $key = 'short_filtered_content' . $len;
         if (!$this->hasData($key)) {
+
+            $isPagebreakDefined = false;
+
             if ($this->getShortContent()) {
                 $content = $this->filterProvider->getPageFilter()->filter(
                     (string) $this->getShortContent() ?: ''
@@ -482,7 +502,9 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
                 if (!$len) {
                     $pageBraker = '<!-- pagebreak -->';
                     $len = mb_strpos($content, $pageBraker);
-                    if (!$len) {
+                    if ($len) {
+                        $isPagebreakDefined = true;
+                    } else {
                         $len = (int)$this->scopeConfig->getValue(
                             'mfblog/post_list/shortcotent_length',
                             ScopeInterface::SCOPE_STORE
@@ -492,9 +514,63 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
             }
 
             if ($len) {
+
+                if (!$isPagebreakDefined) {
+
+                    $oLen = $len;
+                    /* Skip <style> tags at the begining of string in calculations */
+                    $sp1 = mb_strpos($content, '<style>');
+                    if (false !== $sp1) {
+                        $stylePattern = "~\<style(.*)\>(.*)\<\/style\>~";
+                        $cc = preg_replace($stylePattern, '', $content); /* remove style tag */
+                        $sp2 = mb_strpos($content, '</style>');
+
+                        while (false !== $sp1 && false !== $sp2 && $sp1 < $sp2 && $sp2 > $len && $sp1 < $len) {
+                            $len = $oLen + $sp2 + 8;
+                            $sp1 = mb_strpos($content, '<style>', $sp2 + 1);
+                            $sp2 = mb_strpos($content, '</style>', $sp2 + 1);
+                        }
+
+                        $l = mb_strlen($content);
+                        if ($len < $l) {
+                            $sp2 = mb_strrpos($content, '</style>', $len - $l);
+                            if ($len < $oLen + $sp2 + 8) {
+                                $len = $oLen + $sp2 + 8;
+                            }
+                        }
+
+                    } else {
+                        $cc = $content;
+                    }
+
+                    /* Skip long HTML */
+                    $stcc = trim(strip_tags($cc));
+                    //if ($stcc && strlen($stcc) < strlen($cc) / 3) {
+                    if ($stcc && $len < mb_strlen($content)) {
+                        $str = '';
+                        $start = false;
+                        foreach (explode(' ', $stcc) as $s) {
+                            $str .= ($str ? ' ' : '') . $s;
+
+                            $pos = mb_strpos($content, $str);
+                            if (false !== $pos) {
+                                $start = $pos;
+                            } else {
+                                break;
+                            }
+                        }
+
+                        if (false !== $start) {
+                            if ($len < $start + $oLen) {
+                                $len = $start + $oLen;
+                            }
+                        }
+                    }
+                }
+
                 /* Do not cut words */
                 while ($len < strlen($content)
-                    && !in_array($content[$len], [' ', '<', "\t", "\r", "\n"]) ) {
+                    && !in_array($content[$len], [' ', '<', "\t", "\r", "\n"])) {
                     $len++;
                 }
 
@@ -521,6 +597,13 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
                 }
             }
 
+            if ($endСharacters === null) {
+                $endСharacters = $this->scopeConfig->getValue(
+                    'mfblog/post_list/end_characters',
+                    ScopeInterface::SCOPE_STORE
+                );
+            }
+
             if ($len && $endСharacters) {
                 $trimMask = " \t\n\r\0\x0B,.!?";
                 if ($p = strrpos($content, '</')) {
@@ -532,7 +615,7 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
                         . $endСharacters;
                 }
             }
-            
+
             $this->setData($key, $content);
         }
 
@@ -602,7 +685,7 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
             }
         }
 
-        return trim($desc);
+        return trim(html_entity_decode($desc));
     }
 
     /**
@@ -692,6 +775,7 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
         if (null === $this->_relatedTags) {
             $this->_relatedTags = $this->_tagCollectionFactory->create()
                 ->addFieldToFilter('tag_id', ['in' => $this->getTags()])
+                ->addStoreFilter($this->getStoreId())
                 ->addActiveFilter()
                 ->setOrder('title');
         }
@@ -871,7 +955,6 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
             'mfblog/design/publication_date',
             ScopeInterface::SCOPE_STORE
         );
-        return true;
     }
 
     /**
@@ -936,10 +1019,12 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
     }
 
     /**
+     * @deprecated use getDynamicData method in graphQL data provider
      * Prepare all additional data
+     * @param null|array $fields
      * @return array
      */
-    public function getDynamicData()
+    public function getDynamicData($fields = null)
     {
         $data = $this->getData();
 
@@ -958,28 +1043,63 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
         ];
 
         foreach ($keys as $key) {
-            $method = 'get' . str_replace(
-                '_',
-                '',
-                ucwords($key, '_')
-            );
-            $data[$key] = $this->$method();
+            if (null === $fields || array_key_exists($key, $fields)) {
+                $method = 'get' . str_replace(
+                    '_',
+                    '',
+                    ucwords($key, '_')
+                );
+                $data[$key] = $this->$method();
+            }
         }
 
-        $tags = [];
-        foreach ($this->getRelatedTags() as $tag) {
-            $tags[] = $tag->getDynamicData();
+        if (null === $fields || array_key_exists('tags', $fields)) {
+            $tags = [];
+            foreach ($this->getRelatedTags() as $tag) {
+                $tags[] = $tag->getDynamicData(
+                    // isset($fields['tags']) ? $fields['tags'] : null
+                );
+            }
+            $data['tags'] = $tags;
         }
-        $data['tags'] = $tags;
 
-        $categories = [];
-        foreach ($this->getParentCategories() as $category) {
-            $categories[] = $category->getDynamicData();
+        /* Do not use check for null === $fields here
+         * this checks is used for REST, and related data was not provided via reset */
+        if (is_array($fields) && array_key_exists('related_posts', $fields)) {
+            $relatedPosts = [];
+            foreach ($this->getRelatedPosts() as $relatedPost) {
+                $relatedPosts[] = $relatedPost->getDynamicData(
+                    isset($fields['related_posts']) ? $fields['related_posts'] : null
+                );
+            }
+            $data['related_posts'] = $relatedPosts;
         }
-        $data['categories'] = $categories;
 
-        if ($author = $this->getAuthor()) {
-            $data['author'] = $author->getDynamicData();
+        /* Do not use check for null === $fields here */
+        if (is_array($fields) && array_key_exists('related_products', $fields)) {
+            $relatedProducts = [];
+            foreach ($this->getRelatedProducts() as $relatedProduct) {
+                $relatedProducts[] = $relatedProduct->getSku();
+            }
+            $data['related_products'] = $relatedProducts;
+        }
+
+        if (null === $fields || array_key_exists('categories', $fields)) {
+            $categories = [];
+            foreach ($this->getParentCategories() as $category) {
+                $categories[] = $category->getDynamicData(
+                    isset($fields['categories']) ? $fields['categories'] : null
+                );
+            }
+            $data['categories'] = $categories;
+        }
+
+        if (null === $fields || array_key_exists('author', $fields)) {
+            if ($author = $this->getAuthor()) {
+                $data['author'] = $author->getDynamicData(
+                    //isset($fields['author']) ? $fields['author'] : null
+                );
+            }
         }
 
         return $data;
@@ -998,6 +1118,7 @@ class Post extends \Magento\Framework\Model\AbstractModel implements \Magento\Fr
             ->unsetData('update_time')
             ->unsetData('publish_time')
             ->unsetData('identifier')
+            ->unsetData('comments_count')
             ->setTitle($object->getTitle() . ' (' . __('Duplicated') . ')')
             ->setData('is_active', 0);
 

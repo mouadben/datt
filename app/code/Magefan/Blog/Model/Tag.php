@@ -53,6 +53,11 @@ class Tag extends \Magento\Framework\Model\AbstractModel implements \Magento\Fra
     protected $_url;
 
     /**
+     * @var string
+     */
+    protected $controllerName;
+
+    /**
      * Initialize dependencies.
      *
      * @param \Magento\Framework\Model\Context $context
@@ -82,6 +87,7 @@ class Tag extends \Magento\Framework\Model\AbstractModel implements \Magento\Fra
     protected function _construct()
     {
         $this->_init(\Magefan\Blog\Model\ResourceModel\Tag::class);
+        $this->controllerName = URL::CONTROLLER_TAG;
     }
 
     /**
@@ -91,6 +97,16 @@ class Tag extends \Magento\Framework\Model\AbstractModel implements \Magento\Fra
     public function isActive()
     {
         return ($this->getIsActive() == self::STATUS_ENABLED);
+    }
+
+    /**
+     * Retrieve if is visible on store
+     * @return bool
+     */
+    public function isVisibleOnStore($storeId)
+    {
+        return $this->getIsActive()
+            && (null === $storeId || array_intersect([0, $storeId], $this->getStoreIds()));
     }
 
     /**
@@ -193,6 +209,16 @@ class Tag extends \Magento\Framework\Model\AbstractModel implements \Magento\Fra
     }
 
     /**
+     * Retrieve controller name
+     * @return string
+     */
+    public function getControllerName()
+    {
+        return $this->controllerName;
+    }
+
+    /**
+     * @deprecated use getDynamicData method in graphQL data provider
      * Return all additional data
      * @return array
      */

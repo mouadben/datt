@@ -91,6 +91,13 @@ class Category extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
             );
         }
 
+        $id = $this->checkIdentifier($object->getData('identifier'), $object->getData('store_ids'));
+        if ($id && $id !== $object->getId()) {
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('URL key is already in use by another blog item.')
+            );
+        }
+
         return parent::_beforeSave($object);
     }
 
@@ -210,7 +217,7 @@ class Category extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
      */
     protected function isValidPageIdentifier(\Magento\Framework\Model\AbstractModel $object)
     {
-        return preg_match('/^([^?#<>@!&*()$%^\\+=,{}]+)?$/', $object->getData('identifier'));
+        return preg_match('/^([^?#<>@!&*()$%^\\+=,{}"\']+)?$/', $object->getData('identifier'));
     }
 
     /**

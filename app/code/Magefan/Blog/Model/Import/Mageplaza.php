@@ -18,29 +18,12 @@ class Mageplaza extends AbstractImport
 
     public function execute()
     {
-        $config = \Magento\Framework\App\ObjectManager::getInstance()
-            ->get(\Magento\Framework\App\DeploymentConfig::class);
-        $pref = ConfigOptionsListConstants::CONFIG_PATH_DB_CONNECTION_DEFAULT . '/';
-        $this->setData(
-            'dbhost',
-            $config->get($pref . ConfigOptionsListConstants::KEY_HOST)
-        )->setData(
-            'uname',
-            $config->get($pref . ConfigOptionsListConstants::KEY_USER)
-        )->setData(
-            'pwd',
-            $config->get($pref . ConfigOptionsListConstants::KEY_PASSWORD)
-        )->setData(
-            'dbname',
-            $config->get($pref . ConfigOptionsListConstants::KEY_NAME)
-        );
-
         $adapter = $this->getDbAdapter();
         $_pref = $this->getPrefix();
 
         $sql = 'SELECT * FROM ' . $_pref . 'mageplaza_blog_category LIMIT 1';
         try {
-            $this->query($sql);
+            $adapter->query($sql)->execute();
         } catch (\Exception $e) {
             throw new \Exception(__('Mageplaza Blog Extension not detected.'), 1);
         }
@@ -59,7 +42,6 @@ class Mageplaza extends AbstractImport
                     t.meta_description as meta_description,
                     t.description as content,
                     t.parent_id as parent_id,
-                    t.position as position,
                     t.enabled as is_active,
                     t.store_ids as store_ids
                 FROM ' . $_pref . 'mageplaza_blog_category t';
@@ -85,7 +67,7 @@ class Mageplaza extends AbstractImport
             } catch (\Magento\Framework\Exception\LocalizedException $e) {
                 unset($category);
                 $this->_skippedCategories[] = $data['title'];
-                $this->_logger->addDebug('Blog Category Import [' . $data['title'] . ']: '. $e->getMessage());
+                $this->_logger->debug('Blog Category Import [' . $data['title'] . ']: '. $e->getMessage());
             }
         }
 
@@ -170,7 +152,7 @@ class Mageplaza extends AbstractImport
                 }
             } catch (\Magento\Framework\Exception\LocalizedException $e) {
                 $this->_skippedTags[] = $data['title'];
-                $this->_logger->addDebug('Blog Tag Import [' . $data['title'] . ']: '. $e->getMessage());
+                $this->_logger->debug('Blog Tag Import [' . $data['title'] . ']: '. $e->getMessage());
             }
         }
 
@@ -281,7 +263,7 @@ class Mageplaza extends AbstractImport
                 $this->_importedPostsCount++;
             } catch (\Magento\Framework\Exception\LocalizedException $e) {
                 $this->_skippedPosts[] = $data['title'];
-                $this->_logger->addDebug('Blog Post Import [' . $data['title'] . ']: '. $e->getMessage());
+                $this->_logger->debug('Blog Post Import [' . $data['title'] . ']: '. $e->getMessage());
             }
             unset($post);
         }

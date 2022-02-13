@@ -10,6 +10,7 @@ namespace Magefan\Blog\Block\Widget;
 
 /**
  * Blog post list block
+ * @deprecated Do not use this file! It was taken from the Fastest theme to prevent errors after installing the original version
  */
 class PostList extends \Magefan\Blog\Block\Post\PostList\AbstractList implements \Magento\Widget\Block\BlockInterface
 {
